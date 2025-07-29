@@ -8,11 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/inconshreveable/go-update/internal/osext"
+	"go-update/internal/osext"
 )
 
 var (
@@ -83,7 +82,7 @@ func Apply(update io.Reader, opts Options) error {
 		}
 	} else {
 		// no patch to apply, go on through
-		if newBytes, err = ioutil.ReadAll(update); err != nil {
+		if newBytes, err = io.ReadAll(update); err != nil {
 			return err
 		}
 	}
@@ -299,7 +298,7 @@ func (o *Options) verifyChecksum(updated []byte) error {
 	}
 
 	if !bytes.Equal(o.Checksum, checksum) {
-		return fmt.Errorf("Updated file has wrong checksum. Expected: %x, got: %x", o.Checksum, checksum)
+		return fmt.Errorf("updated file has wrong checksum. Expected: %x, got: %x", o.Checksum, checksum)
 	}
 	return nil
 }

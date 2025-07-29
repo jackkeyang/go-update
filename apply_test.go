@@ -7,12 +7,12 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/inconshreveable/go-update/internal/binarydist"
+	"go-update/internal/binarydist"
 )
 
 var (
@@ -28,7 +28,7 @@ func cleanup(path string) {
 
 // we write with a separate name for each test so that we can run them in parallel
 func writeOldFile(path string, t *testing.T) {
-	if err := ioutil.WriteFile(path, oldFile, 0777); err != nil {
+	if err := os.WriteFile(path, oldFile, 0777); err != nil {
 		t.Fatalf("Failed to write file for testing preparation: %v", err)
 	}
 }
@@ -38,7 +38,7 @@ func validateUpdate(path string, err error, t *testing.T) {
 		t.Fatalf("Failed to update: %v", err)
 	}
 
-	buf, err := ioutil.ReadFile(path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Failed to read file post-update: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestApplyOldSavePath(t *testing.T) {
 	})
 	validateUpdate(fName, err, t)
 
-	if _, err := os.Stat(oldfName); os.IsNotExist(err) {
+	if _, err := os.Stat(oldfName); errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("Failed to find the old file: %v", err)
 	}
 
@@ -224,7 +224,15 @@ func signec(privatePEM string, source []byte, t *testing.T) []byte {
 }
 
 func signrsa(privatePEM string, source []byte, t *testing.T) []byte {
-	parseFn := func(p []byte) (crypto.Signer, error) { return x509.ParsePKCS1PrivateKey(p) }
+	parseFn := func(p []byte) (crypto.Signer, error) {
+		// Note: ParsePKCS1PrivateKey is deprecated in Go 1.18+, but the test key is in PKCS1 format
+		// In production, consider using PKCS8 format keys instead
+		key, err := x509.ParsePKCS1PrivateKey(p)
+		if err != nil {
+			return nil, err
+		}
+		return key, nil
+	}
 	return sign(parseFn, privatePEM, source, t)
 }
 
