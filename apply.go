@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go-update/internal/osext"
+	"github.com/jackkeyang/go-update/internal/osext"
 )
 
 var (

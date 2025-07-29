@@ -12,7 +12,7 @@ import (
 	"os"
 	"testing"
 
-	"go-update/internal/binarydist"
+	"github.com/jackkeyang/go-update/internal/binarydist"
 )
 
 var (
